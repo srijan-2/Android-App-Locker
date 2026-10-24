@@ -1,0 +1,7 @@
+package com.antimatter.applocker.ui.navigation
+
+sealed class Route(val path: String) {
+    data object Protection : Route("protection")
+    data object Apps : Route("apps")
+    data object Settings : Route("settings")
+}
