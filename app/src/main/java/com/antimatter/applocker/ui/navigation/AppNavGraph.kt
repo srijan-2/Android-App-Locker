@@ -27,10 +27,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.antimatter.applocker.ui.common.PlaceholderScreen
+import com.antimatter.applocker.ui.apps.AppsScreen
 import com.antimatter.applocker.ui.dashboard.DashboardScreen
+import com.antimatter.applocker.ui.monitoring.MonitoringSetupScreen
 import com.antimatter.applocker.ui.pin.PinFlowMode
 import com.antimatter.applocker.ui.pin.PinSetupScreen
+import com.antimatter.applocker.ui.settings.SettingsScreen
+import com.antimatter.applocker.ui.unlock.UnlockGate
 
 private data class TopTab(
     val route: Route,
@@ -45,7 +48,11 @@ private val topTabs = listOf(
 )
 
 /** Full-screen flows that hide the tab bar. */
-private val flowRoutes = setOf(Route.PinCreate.path, Route.PinChange.path)
+private val flowRoutes = setOf(
+    Route.PinCreate.path,
+    Route.PinChange.path,
+    Route.MonitoringSetup.path
+)
 
 @Composable
 fun AppNavGraph(navController: NavHostController = rememberNavController()) {
@@ -110,11 +117,26 @@ fun AppNavGraph(navController: NavHostController = rememberNavController()) {
             composable(Route.Protection.path) {
                 DashboardScreen(
                     onSetupPin = { navController.navigate(Route.PinCreate.path) },
-                    onChangePin = { navController.navigate(Route.PinChange.path) }
+                    onChangePin = { navController.navigate(Route.PinChange.path) },
+                    onOpenMonitoring = { navController.navigate(Route.MonitoringSetup.path) }
                 )
             }
-            composable(Route.Apps.path) { PlaceholderScreen(title = "Apps") }
-            composable(Route.Settings.path) { PlaceholderScreen(title = "Settings") }
+            composable(Route.Apps.path) {
+                UnlockGate(
+                    title = "Unlock Apps",
+                    subtitle = "Enter your PIN to manage protected apps."
+                ) {
+                    AppsScreen()
+                }
+            }
+            composable(Route.Settings.path) {
+                UnlockGate(
+                    title = "Unlock Settings",
+                    subtitle = "Enter your PIN to continue."
+                ) {
+                    SettingsScreen(onChangePin = { navController.navigate(Route.PinChange.path) })
+                }
+            }
             composable(Route.PinCreate.path) {
                 PinSetupScreen(
                     mode = PinFlowMode.Create,
@@ -126,6 +148,9 @@ fun AppNavGraph(navController: NavHostController = rememberNavController()) {
                     mode = PinFlowMode.Change,
                     onClose = { navController.popBackStack() }
                 )
+            }
+            composable(Route.MonitoringSetup.path) {
+                MonitoringSetupScreen(onClose = { navController.popBackStack() })
             }
         }
     }

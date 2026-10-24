@@ -1,7 +1,9 @@
 package com.antimatter.applocker.data
 
 import android.content.Context
+import android.os.SystemClock
 import android.util.Base64
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -38,6 +40,7 @@ class PinRepository(
         val SALT = stringPreferencesKey("pin_salt")
         val HASH = stringPreferencesKey("pin_hash")
         val ITERATIONS = intPreferencesKey("pin_iterations")
+        val VERSION = intPreferencesKey("pin_hash_version")
         val LENGTH = intPreferencesKey("pin_length")
         val FAILS = intPreferencesKey("pin_failed_attempts")
         val LOCK_UNTIL = longPreferencesKey("pin_lock_until")
@@ -49,34 +52,52 @@ class PinRepository(
         PinState(isSet = prefs[Keys.HASH] != null, length = prefs[Keys.LENGTH] ?: 0)
     }
 
+    /**
+     * Runs the PIN crypto once in the background so the first real check is not slowed by
+     * cold-start costs (Keystore, security provider loading, JIT). Safe to call any time.
+     */
+    suspend fun warmUp() = withContext(Dispatchers.Default) {
+        runCatching {
+            KeystoreHmac.sign(
+                PinHasher.derive(
+                    charArrayOf('0', '0', '0', '0'),
+                    ByteArray(PinHasher.SALT_BYTES),
+                    20_000
+                )
+            )
+        }
+        Unit
+    }
+
     suspend fun setPin(pin: String) {
         require(PinHasher.isValidFormat(pin)) { "PIN must be 4 to 8 digits" }
-        val salt = PinHasher.newSalt()
-        val hash = computeHash(pin, salt, PinHasher.ITERATIONS)
-        store.edit { prefs ->
-            prefs[Keys.SALT] = encode(salt)
-            prefs[Keys.HASH] = encode(hash)
-            prefs[Keys.ITERATIONS] = PinHasher.ITERATIONS
-            prefs[Keys.LENGTH] = pin.length
-            prefs[Keys.FAILS] = 0
-            prefs[Keys.LOCK_UNTIL] = 0L
-        }
+        writePin(pin)
     }
 
     suspend fun verify(pin: String): VerifyResult {
         val prefs = store.data.first()
         val storedHash = prefs[Keys.HASH]?.let(::decode) ?: return VerifyResult.NotSet
         val salt = prefs[Keys.SALT]?.let(::decode) ?: return VerifyResult.NotSet
-        val iterations = prefs[Keys.ITERATIONS] ?: PinHasher.ITERATIONS
+        val iterations = prefs[Keys.ITERATIONS] ?: PinHasher.FALLBACK_ITERATIONS
 
         val lockUntil = prefs[Keys.LOCK_UNTIL] ?: 0L
         if (clock() < lockUntil) return VerifyResult.LockedOut(lockUntil)
 
+        val start = SystemClock.elapsedRealtime()
         val candidate = computeHash(pin, salt, iterations)
+        Log.d(TAG, "verify: iterations=$iterations, hashing took ${SystemClock.elapsedRealtime() - start} ms")
+
         if (PinHasher.constantTimeEquals(candidate, storedHash)) {
-            store.edit { p ->
-                p[Keys.FAILS] = 0
-                p[Keys.LOCK_UNTIL] = 0L
+            val needsUpgrade = (prefs[Keys.VERSION] ?: 1) < HASH_VERSION
+            val needsReset = (prefs[Keys.FAILS] ?: 0) != 0 || lockUntil != 0L
+            if (needsUpgrade) {
+                // PINs saved before calibration are re-hashed once, now that the PIN is known.
+                runCatching { writePin(pin) }
+            } else if (needsReset) {
+                store.edit { p ->
+                    p[Keys.FAILS] = 0
+                    p[Keys.LOCK_UNTIL] = 0L
+                }
             }
             return VerifyResult.Success
         }
@@ -99,6 +120,23 @@ class PinRepository(
         return result
     }
 
+    /** Fresh salt + calibrated iteration count, then store everything and clear lockout. */
+    private suspend fun writePin(pin: String) {
+        val salt = PinHasher.newSalt()
+        val iterations = withContext(Dispatchers.Default) { PinHasher.calibrateIterations() }
+        Log.d(TAG, "calibrated iterations=$iterations")
+        val hash = computeHash(pin, salt, iterations)
+        store.edit { prefs ->
+            prefs[Keys.SALT] = encode(salt)
+            prefs[Keys.HASH] = encode(hash)
+            prefs[Keys.ITERATIONS] = iterations
+            prefs[Keys.VERSION] = HASH_VERSION
+            prefs[Keys.LENGTH] = pin.length
+            prefs[Keys.FAILS] = 0
+            prefs[Keys.LOCK_UNTIL] = 0L
+        }
+    }
+
     private suspend fun computeHash(pin: String, salt: ByteArray, iterations: Int): ByteArray =
         withContext(Dispatchers.Default) {
             val chars = pin.toCharArray()
@@ -111,4 +149,10 @@ class PinRepository(
 
     private fun encode(bytes: ByteArray): String = Base64.encodeToString(bytes, Base64.NO_WRAP)
     private fun decode(text: String): ByteArray = Base64.decode(text, Base64.NO_WRAP)
+
+    private companion object {
+        const val TAG = "PinRepo"
+        /** 1 = fixed iteration count (old), 2 = calibrated on this device. */
+        const val HASH_VERSION = 2
+    }
 }

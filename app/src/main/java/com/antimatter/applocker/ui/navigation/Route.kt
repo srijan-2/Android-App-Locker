@@ -6,4 +6,5 @@ sealed class Route(val path: String) {
     data object Settings : Route("settings")
     data object PinCreate : Route("pin_create")
     data object PinChange : Route("pin_change")
+    data object MonitoringSetup : Route("monitoring_setup")
 }

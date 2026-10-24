@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Backspace
+import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -114,12 +115,17 @@ private fun Dot(isFilled: Boolean) {
     )
 }
 
+/**
+ * [onBiometric], when non-null, shows a fingerprint key in the bottom-left slot.
+ * It stays tappable even when digit entry is disabled (for example during a PIN lockout).
+ */
 @Composable
 fun PinKeypad(
     onDigit: (Char) -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    onBiometric: (() -> Unit)? = null
 ) {
     val view = LocalView.current
     Column(
@@ -138,7 +144,14 @@ fun PinKeypad(
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-            Spacer(Modifier.size(KeySize))
+            if (onBiometric != null) {
+                BiometricKeyButton {
+                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                    onBiometric()
+                }
+            } else {
+                Spacer(Modifier.size(KeySize))
+            }
             DigitKey(digit = '0', enabled = enabled) {
                 view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                 onDigit('0')
@@ -184,6 +197,24 @@ private fun DeleteKey(enabled: Boolean, onClick: () -> Unit) {
             imageVector = Icons.AutoMirrored.Filled.Backspace,
             contentDescription = "Delete",
             tint = MaterialTheme.colorScheme.onBackground
+        )
+    }
+}
+
+@Composable
+private fun BiometricKeyButton(onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(KeySize)
+            .clip(CircleShape)
+            .clickable(role = Role.Button, onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Fingerprint,
+            contentDescription = "Use fingerprint",
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(32.dp)
         )
     }
 }
