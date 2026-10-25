@@ -7,9 +7,23 @@
 **A clean, ad-free Android app locker built with Kotlin and Jetpack Compose.**  
 Protect selected apps with a PIN or biometrics, with a simple interface and no advertising clutter.
 
-[**⬇ Download APK**](https://github.com/srijan-2/Android-App-Locker/releases/latest/download/Ward.apk) · [View Releases](https://github.com/srijan-2/Android-App-Locker/releases) · [Report a Bug](https://github.com/srijan-2/Android-App-Locker/issues)
+[**⬇ Download APK**](https://github.com/srijan-2/Ward--App-Locker/releases/latest/download/Ward.apk) · [View Releases](https://github.com/srijan-2/Ward--App-Locker/releases) · [Report a Bug](https://github.com/srijan-2/Ward--App-Locker/issues)
 
 </div>
+
+## Screenshots
+
+<p align="center">
+  <img src="screenshots/01-splash.jpg" alt="Ward splash screen" width="18.5%">
+  <img src="screenshots/02-protection.jpg" alt="Ward protection dashboard" width="18.5%">
+  <img src="screenshots/03-unlock.jpg" alt="Ward PIN unlock screen" width="18.5%">
+  <img src="screenshots/04-apps.jpg" alt="Choose apps to protect in Ward" width="18.5%">
+  <img src="screenshots/05-settings.jpg" alt="Ward settings and relock options" width="18.5%">
+</p>
+
+<p align="center">
+  <em>Splash · Protection dashboard · PIN unlock · App selection · Settings</em>
+</p>
 
 ---
 
@@ -38,12 +52,12 @@ Ward is designed to make app protection straightforward: choose the apps you wan
 
 ### Option 1: Download the APK from GitHub
 
-1. Tap **[⬇ Download Ward APK](https://github.com/srijan-2/Android-App-Locker/releases/latest/download/Ward.apk)**.
+1. Tap **[⬇ Download Ward APK](https://github.com/srijan-2/Ward--App-Locker/releases/latest/download/Ward.apk)**.
 2. On your Android device, open the downloaded `Ward.apk`.
 3. If Android asks, allow your browser or file manager to install unknown apps for this installation.
 4. Continue with the installation and open Ward.
 
-If the download link says the asset is unavailable, visit the **[Releases page](https://github.com/srijan-2/Android-App-Locker/releases)**. A release with the APK attached must be published before direct downloads will work.
+If the download link says the asset is unavailable, visit the **[Releases page](https://github.com/srijan-2/Ward--App-Locker/releases)**. A release with the APK attached must be published before direct downloads will work.
 
 **Compatibility:** the current Gradle configuration sets `minSdk = 31`, so the app targets Android 12 and newer. Device manufacturers and OS versions can affect accessibility-service behavior.
 
@@ -102,7 +116,7 @@ The Accessibility service must be enabled manually by the user. Android does not
 ### Clone the repository
 
 ```bash
-git clone https://github.com/srijan-2/Android-App-Locker.git
+git clone https://github.com/srijan-2/Ward--App-Locker.git
 cd Android-App-Locker
 ```
 
@@ -155,7 +169,7 @@ The README's **Download APK** button points to the latest GitHub Release asset n
 The direct-download URL will then be:
 
 ```text
-https://github.com/srijan-2/Android-App-Locker/releases/latest/download/Ward.apk
+https://github.com/srijan-2/Ward--App-Locker/releases/latest/download/Ward.apk
 ```
 
 For a release build, use Android Studio's **Build → Generate Signed Bundle / APK** flow and sign the APK with your release key. Keep the keystore and passwords private and backed up securely. Updates should use the same signing key. Do not distribute an unsigned or untested build as a production release.
