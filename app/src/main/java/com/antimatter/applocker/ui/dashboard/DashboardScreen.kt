@@ -18,11 +18,16 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.antimatter.applocker.AppLockerApp
+import com.antimatter.applocker.service.MonitoringRuntime
+import com.antimatter.applocker.service.MonitoringStatus
 import com.antimatter.applocker.service.isMonitoringEnabled
+import com.antimatter.applocker.service.monitoringStatus
 import com.antimatter.applocker.ui.components.GroupedDivider
 import com.antimatter.applocker.ui.components.GroupedRow
 import com.antimatter.applocker.ui.components.GroupedSection
 import com.antimatter.applocker.ui.components.LargeTitle
+import com.antimatter.applocker.ui.setup.REQUIRED_STEPS
+import com.antimatter.applocker.ui.setup.requiredStepsDone
 import com.antimatter.applocker.ui.theme.LockerSuccess
 import com.antimatter.applocker.ui.theme.LockerWarning
 import com.antimatter.applocker.ui.theme.Spacing
@@ -31,7 +36,8 @@ import com.antimatter.applocker.ui.theme.Spacing
 fun DashboardScreen(
     onSetupPin: () -> Unit,
     onChangePin: () -> Unit,
-    onOpenMonitoring: () -> Unit
+    onOpenMonitoring: () -> Unit,
+    onOpenSetup: () -> Unit
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as AppLockerApp
@@ -45,17 +51,20 @@ fun DashboardScreen(
     val pinState by viewModel.pinState.collectAsStateWithLifecycle()
     val protectedCount by viewModel.protectedCount.collectAsStateWithLifecycle()
     val relockDelay by viewModel.relockDelay.collectAsStateWithLifecycle()
+    val connected by MonitoringRuntime.connected.collectAsStateWithLifecycle()
     val pin = pinState
 
     // The switch lives in Android settings, so look again whenever this screen comes back.
-    var monitoringOn by remember { mutableStateOf(isMonitoringEnabled(context)) }
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { monitoringOn = isMonitoringEnabled(context) }
+    var monitoringEnabled by remember { mutableStateOf(isMonitoringEnabled(context)) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { monitoringEnabled = isMonitoringEnabled(context) }
+    val monitoring = monitoringStatus(monitoringEnabled, connected)
 
-    val footer = when {
-        pin != null && !pin.isSet -> "Set a PIN to start protecting apps."
-        !monitoringOn -> "Turn on monitoring so protected apps ask for your PIN."
-        else -> "Tap PIN to change it."
-    }
+    val stepsDone = requiredStepsDone(
+        pinSet = pin?.isSet == true,
+        monitoringActive = monitoring == MonitoringStatus.Active,
+        protectedCount = protectedCount
+    )
+    val ready = stepsDone == REQUIRED_STEPS
 
     Column(
         modifier = Modifier
@@ -66,7 +75,29 @@ fun DashboardScreen(
     ) {
         LargeTitle("Protection")
 
-        GroupedSection(footer = footer) {
+        GroupedSection(
+            footer = if (ready) {
+                "Protected apps ask for your PIN or fingerprint."
+            } else {
+                "Finish setup so protected apps are locked."
+            }
+        ) {
+            GroupedRow(
+                title = "Setup",
+                value = if (ready) "Ready" else "$stepsDone of $REQUIRED_STEPS",
+                dotColor = if (ready) LockerSuccess else LockerWarning,
+                showChevron = true,
+                onClick = onOpenSetup
+            )
+        }
+
+        GroupedSection(
+            footer = if (pin != null && !pin.isSet) {
+                "Set a PIN to start protecting apps."
+            } else {
+                "Tap PIN to change it."
+            }
+        ) {
             GroupedRow(
                 title = "PIN",
                 value = when {
@@ -84,8 +115,12 @@ fun DashboardScreen(
             GroupedDivider()
             GroupedRow(
                 title = "Monitoring",
-                value = if (monitoringOn) "On" else "Off",
-                dotColor = if (monitoringOn) LockerSuccess else LockerWarning,
+                value = when (monitoring) {
+                    MonitoringStatus.Active -> "On"
+                    MonitoringStatus.NotRunning -> "Not running"
+                    MonitoringStatus.Off -> "Off"
+                },
+                dotColor = if (monitoring == MonitoringStatus.Active) LockerSuccess else LockerWarning,
                 showChevron = true,
                 onClick = onOpenMonitoring
             )

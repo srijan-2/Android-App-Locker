@@ -28,7 +28,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.antimatter.applocker.service.MonitoringRuntime
+import com.antimatter.applocker.service.MonitoringStatus
 import com.antimatter.applocker.service.isMonitoringEnabled
+import com.antimatter.applocker.service.monitoringStatus
 import com.antimatter.applocker.ui.components.GroupedRow
 import com.antimatter.applocker.ui.components.GroupedSection
 import com.antimatter.applocker.ui.components.LargeTitle
@@ -42,8 +46,10 @@ private val ButtonBlue = Color(0xFF0071E3)
 @Composable
 fun MonitoringSetupScreen(onClose: () -> Unit) {
     val context = LocalContext.current
-    var enabled by remember { mutableStateOf(isMonitoringEnabled(context)) }
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { enabled = isMonitoringEnabled(context) }
+    var enabledInSettings by remember { mutableStateOf(isMonitoringEnabled(context)) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { enabledInSettings = isMonitoringEnabled(context) }
+    val connected by MonitoringRuntime.connected.collectAsStateWithLifecycle()
+    val status = monitoringStatus(enabledInSettings, connected)
 
     Column(
         modifier = Modifier
@@ -58,20 +64,26 @@ fun MonitoringSetupScreen(onClose: () -> Unit) {
         LargeTitle("Monitoring")
 
         GroupedSection(
-            footer = if (enabled) {
-                "Protected apps will now ask for your PIN or fingerprint."
-            } else {
-                "Monitoring is what notices a protected app opening. It needs one switch in Android settings."
+            footer = when (status) {
+                MonitoringStatus.Active -> "Protected apps will now ask for your PIN or fingerprint."
+                MonitoringStatus.NotRunning ->
+                    "The switch is on, but Android hasn’t started the service. Turn it off and on again."
+                MonitoringStatus.Off ->
+                    "Monitoring is what notices a protected app opening. It needs one switch in Android settings."
             }
         ) {
             GroupedRow(
                 title = "Status",
-                value = if (enabled) "On" else "Off",
-                dotColor = if (enabled) LockerSuccess else LockerWarning
+                value = when (status) {
+                    MonitoringStatus.Active -> "On"
+                    MonitoringStatus.NotRunning -> "Not running"
+                    MonitoringStatus.Off -> "Off"
+                },
+                dotColor = if (status == MonitoringStatus.Active) LockerSuccess else LockerWarning
             )
         }
 
-        if (!enabled) {
+        if (status != MonitoringStatus.Active) {
             Button(
                 onClick = {
                     context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
@@ -102,7 +114,8 @@ fun MonitoringSetupScreen(onClose: () -> Unit) {
             title = "How it works",
             body = "App Locker uses an Android accessibility service to notice when a protected " +
                 "app comes to the front, then asks for your PIN or fingerprint. It only runs " +
-                "when Android reports that a window changed, so it uses almost no battery."
+                "when Android reports that a window changed, so it uses almost no battery. " +
+                "After a restart, Android turns it back on by itself."
         )
         InfoBlock(
             title = "What it can’t see",
@@ -113,7 +126,9 @@ fun MonitoringSetupScreen(onClose: () -> Unit) {
             title = "Limits",
             body = "A protected app may show for a split second before the lock appears. " +
                 "Anyone who can unlock your phone can turn monitoring off in Android settings, " +
-                "so this protects against casual snooping, not a determined attacker."
+                "so this protects against casual snooping, not a determined attacker.\n\n" +
+                "To make that harder, you can also protect the Settings app on the Apps tab. " +
+                "Be careful: if you forget your PIN, you won’t be able to open Settings."
         )
     }
 }

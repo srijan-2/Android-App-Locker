@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The same padlock, tightly cropped, for use inside the app. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="56dp"
+    android:viewportWidth="48"
+    android:viewportHeight="56">
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M12,24H36A7,7 0 0 1 43,31V45A7,7 0 0 1 36,52H12A7,7 0 0 1 5,45V31A7,7 0 0 1 12,24Z"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="3" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M13,24V15A11,11 0 0 1 35,15V24"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="3" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M24,35V43"
+        android:strokeColor="#0A84FF"
+        android:strokeLineCap="round"
+        android:strokeWidth="4" />
+</vector>

@@ -1,10 +1,16 @@
 package com.antimatter.applocker.ui.unlock
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.antimatter.applocker.AppLockerApp
+import com.antimatter.applocker.R
 import com.antimatter.applocker.data.PinState
 
 /**
@@ -29,7 +35,14 @@ fun UnlockGate(
         else -> UnlockScreen(
             title = title,
             subtitle = subtitle,
-            onUnlocked = { app.authSession.markUnlocked() }
+            onUnlocked = { app.authSession.markUnlocked() },
+            header = {
+                Image(
+                    painter = painterResource(R.drawable.ic_applocker_mark),
+                    contentDescription = null,
+                    modifier = Modifier.size(width = 48.dp, height = 56.dp)
+                )
+            }
         )
     }
 }

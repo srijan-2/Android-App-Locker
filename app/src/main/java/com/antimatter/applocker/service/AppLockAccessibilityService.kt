@@ -23,6 +23,9 @@ import kotlinx.coroutines.launch
  * Event-driven foreground detection: Android tells this service when a window changes,
  * so nothing polls and nothing runs in between. It asks for window-change events only and
  * cannot read screen content (see res/xml/accessibility_service_config.xml).
+ *
+ * Android re-starts enabled accessibility services by itself after a reboot, so no boot
+ * receiver or foreground service is needed.
  */
 class AppLockAccessibilityService : AccessibilityService() {
 
@@ -73,6 +76,7 @@ class AppLockAccessibilityService : AccessibilityService() {
         }
         ContextCompat.registerReceiver(this, screenReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
         refreshImePackages()
+        MonitoringRuntime.setConnected(true)
         Log.d(TAG, "monitoring connected")
     }
 
@@ -103,9 +107,11 @@ class AppLockAccessibilityService : AccessibilityService() {
     }
 
     private fun cleanup() {
+        MonitoringRuntime.setConnected(false)
         scope?.cancel()
         scope = null
         runCatching { unregisterReceiver(screenReceiver) }
+        Log.d(TAG, "monitoring disconnected")
     }
 
     private fun showLock(pkg: String) {

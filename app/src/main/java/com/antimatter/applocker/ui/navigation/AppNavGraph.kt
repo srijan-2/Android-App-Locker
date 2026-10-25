@@ -33,6 +33,7 @@ import com.antimatter.applocker.ui.monitoring.MonitoringSetupScreen
 import com.antimatter.applocker.ui.pin.PinFlowMode
 import com.antimatter.applocker.ui.pin.PinSetupScreen
 import com.antimatter.applocker.ui.settings.SettingsScreen
+import com.antimatter.applocker.ui.setup.SetupScreen
 import com.antimatter.applocker.ui.unlock.UnlockGate
 
 private data class TopTab(
@@ -51,7 +52,8 @@ private val topTabs = listOf(
 private val flowRoutes = setOf(
     Route.PinCreate.path,
     Route.PinChange.path,
-    Route.MonitoringSetup.path
+    Route.MonitoringSetup.path,
+    Route.Setup.path
 )
 
 @Composable
@@ -60,6 +62,17 @@ fun AppNavGraph(navController: NavHostController = rememberNavController()) {
     val currentDestination = backStackEntry?.destination
     val currentRoute = currentDestination?.route
     val showBottomBar = currentRoute == null || currentRoute !in flowRoutes
+
+    // Switches to a tab and drops any full-screen flow that was on top of it.
+    fun openTab(route: Route) {
+        navController.navigate(route.path) {
+            popUpTo(navController.graph.findStartDestination().id) {
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -79,15 +92,7 @@ fun AppNavGraph(navController: NavHostController = rememberNavController()) {
                                 currentDestination?.hierarchy?.any { it.route == tab.route.path } == true
                             NavigationBarItem(
                                 selected = selected,
-                                onClick = {
-                                    navController.navigate(tab.route.path) {
-                                        popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = true
-                                        }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                },
+                                onClick = { openTab(tab.route) },
                                 icon = {
                                     Icon(
                                         imageVector = tab.icon,
@@ -118,7 +123,8 @@ fun AppNavGraph(navController: NavHostController = rememberNavController()) {
                 DashboardScreen(
                     onSetupPin = { navController.navigate(Route.PinCreate.path) },
                     onChangePin = { navController.navigate(Route.PinChange.path) },
-                    onOpenMonitoring = { navController.navigate(Route.MonitoringSetup.path) }
+                    onOpenMonitoring = { navController.navigate(Route.MonitoringSetup.path) },
+                    onOpenSetup = { navController.navigate(Route.Setup.path) }
                 )
             }
             composable(Route.Apps.path) {
@@ -151,6 +157,15 @@ fun AppNavGraph(navController: NavHostController = rememberNavController()) {
             }
             composable(Route.MonitoringSetup.path) {
                 MonitoringSetupScreen(onClose = { navController.popBackStack() })
+            }
+            composable(Route.Setup.path) {
+                SetupScreen(
+                    onClose = { navController.popBackStack() },
+                    onCreatePin = { navController.navigate(Route.PinCreate.path) },
+                    onOpenMonitoring = { navController.navigate(Route.MonitoringSetup.path) },
+                    onOpenApps = { openTab(Route.Apps) },
+                    onOpenSettings = { openTab(Route.Settings) }
+                )
             }
         }
     }
