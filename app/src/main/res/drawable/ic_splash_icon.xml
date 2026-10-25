@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Draws the padlock line by line: body, then shackle, then the blue keyhole. -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/ic_splash_lock">
+    <target
+        android:name="body"
+        android:animation="@animator/splash_draw_body" />
+    <target
+        android:name="shackle"
+        android:animation="@animator/splash_draw_shackle" />
+    <target
+        android:name="keyhole"
+        android:animation="@animator/splash_draw_keyhole" />
+</animated-vector>

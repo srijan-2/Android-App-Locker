@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ward_black">#000000</color>
+
+    <!-- Theme for MainActivity: dark window (no white flash) and the animated splash. -->
+    <style name="Theme.AppLocker.Launch" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/ward_black</item>
+        <item name="android:windowSplashScreenBackground">@color/ward_black</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_splash_icon</item>
+        <item name="android:windowSplashScreenAnimationDuration">800</item>
+        <item name="android:windowSplashScreenBrandingImage">@drawable/ic_splash_wordmark</item>
+        <item name="android:windowSplashScreenBehavior">icon_preferred</item>
+    </style>
+
+    <!-- Theme for the lock screen: dark and quiet, so nothing flashes before the PIN pad. -->
+    <style name="Theme.AppLocker.Lock" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/ward_black</item>
+        <item name="android:windowSplashScreenBackground">@color/ward_black</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_splash_none</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
+    </style>
+</resources>

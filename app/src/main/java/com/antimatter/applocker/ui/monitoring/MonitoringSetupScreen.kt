@@ -25,10 +25,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.antimatter.applocker.R
 import com.antimatter.applocker.service.MonitoringRuntime
 import com.antimatter.applocker.service.MonitoringStatus
 import com.antimatter.applocker.service.isMonitoringEnabled
@@ -46,6 +48,7 @@ private val ButtonBlue = Color(0xFF0071E3)
 @Composable
 fun MonitoringSetupScreen(onClose: () -> Unit) {
     val context = LocalContext.current
+    val appName = stringResource(R.string.app_name)
     var enabledInSettings by remember { mutableStateOf(isMonitoringEnabled(context)) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { enabledInSettings = isMonitoringEnabled(context) }
     val connected by MonitoringRuntime.connected.collectAsStateWithLifecycle()
@@ -103,23 +106,23 @@ fun MonitoringSetupScreen(onClose: () -> Unit) {
             InfoBlock(
                 title = "Steps",
                 body = "1. Tap the button above.\n" +
-                    "2. Open Installed apps (or Downloaded apps) and choose App Locker.\n" +
+                    "2. Open Installed apps (or Downloaded apps) and choose $appName.\n" +
                     "3. Turn it on and confirm.\n\n" +
-                    "On newer Android versions, if the switch is greyed out, open App Locker’s " +
+                    "On newer Android versions, if the switch is greyed out, open $appName’s " +
                     "App info, tap the three-dot menu and choose Allow restricted settings."
             )
         }
 
         InfoBlock(
             title = "How it works",
-            body = "App Locker uses an Android accessibility service to notice when a protected " +
+            body = "$appName uses an Android accessibility service to notice when a protected " +
                 "app comes to the front, then asks for your PIN or fingerprint. It only runs " +
                 "when Android reports that a window changed, so it uses almost no battery. " +
                 "After a restart, Android turns it back on by itself."
         )
         InfoBlock(
             title = "What it can’t see",
-            body = "App Locker asks Android for window-change events only. It cannot read the " +
+            body = "$appName asks Android for window-change events only. It cannot read the " +
                 "text on your screen or what you type."
         )
         InfoBlock(

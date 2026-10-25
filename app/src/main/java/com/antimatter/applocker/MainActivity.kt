@@ -2,6 +2,10 @@ package com.antimatter.applocker
 
 import android.graphics.Color
 import android.os.Bundle
+import android.os.Process
+import android.os.SystemClock
+import android.view.View
+import android.view.ViewTreeObserver
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -31,6 +35,27 @@ class MainActivity : FragmentActivity() {
                 }
             }
         }
+        holdSplashUntilAnimationEnds()
+    }
+
+    /**
+     * Android removes the splash screen at the first drawn frame, which on a cold start is
+     * earlier than the padlock animation ends. Hold that first frame until SPLASH_MILLIS have
+     * passed since the process started. On warm starts that time has long passed, so nothing waits.
+     */
+    private fun holdSplashUntilAnimationEnds() {
+        val content = findViewById<View>(android.R.id.content)
+        content.viewTreeObserver.addOnPreDrawListener(object : ViewTreeObserver.OnPreDrawListener {
+            override fun onPreDraw(): Boolean {
+                val sinceProcessStart =
+                    SystemClock.elapsedRealtime() - Process.getStartElapsedRealtime()
+                if (sinceProcessStart < SPLASH_MILLIS) return false
+                if (content.viewTreeObserver.isAlive) {
+                    content.viewTreeObserver.removeOnPreDrawListener(this)
+                }
+                return true
+            }
+        })
     }
 
     override fun onStop() {
@@ -39,5 +64,10 @@ class MainActivity : FragmentActivity() {
         if (!isChangingConfigurations) {
             (application as AppLockerApp).authSession.lock()
         }
+    }
+
+    private companion object {
+        // Animation is 800 ms; the extra margin covers the start of the exit fade.
+        const val SPLASH_MILLIS = 1_000L
     }
 }

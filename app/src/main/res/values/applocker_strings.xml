@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="accessibility_service_description">App Locker uses this to notice when a protected app opens, so it can ask for your PIN or fingerprint. It does not read what is on your screen.</string>
+    <string name="accessibility_service_description">Ward uses this to notice when a protected app opens, so it can ask for your PIN or fingerprint. It does not read what is on your screen.</string>
 </resources>

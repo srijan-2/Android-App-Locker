@@ -34,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -43,6 +44,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.antimatter.applocker.AppLockerApp
+import com.antimatter.applocker.R
 import com.antimatter.applocker.service.MonitoringRuntime
 import com.antimatter.applocker.service.MonitoringStatus
 import com.antimatter.applocker.service.isIgnoringBatteryOptimizations
@@ -66,6 +68,7 @@ fun SetupScreen(
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as AppLockerApp
+    val appName = stringResource(R.string.app_name)
     val viewModel: SetupViewModel = viewModel(
         factory = SetupViewModel.factory(
             app.pinRepository,
@@ -139,7 +142,7 @@ fun SetupScreen(
                     MonitoringStatus.Active -> "Monitoring is on."
                     MonitoringStatus.NotRunning ->
                         "Switched on, but Android hasn’t started it. Turn it off and on again."
-                    MonitoringStatus.Off -> "Lets App Locker notice when a protected app opens."
+                    MonitoringStatus.Off -> "Lets $appName notice when a protected app opens."
                 },
                 step = if (monitoring == MonitoringStatus.Active) StepState.Done else StepState.Todo,
                 onClick = onOpenMonitoring
@@ -165,7 +168,7 @@ fun SetupScreen(
                 modifier = Modifier.padding(start = Spacing.md, bottom = Spacing.xs)
             )
             GroupedSection(
-                footer = "Battery: App Locker only runs when Android reports a window change, " +
+                footer = "Battery: $appName only runs when Android reports a window change, " +
                     "so it uses almost no power. Some phones still stop background apps; " +
                     "this tells Android not to."
             ) {
@@ -178,7 +181,7 @@ fun SetupScreen(
                 GroupedDivider()
                 SetupRow(
                     title = "Allow background activity",
-                    subtitle = if (batteryOk) "Android won’t restrict App Locker." else "Recommended for reliability.",
+                    subtitle = if (batteryOk) "Android won’t restrict $appName." else "Recommended for reliability.",
                     step = if (batteryOk) StepState.Done else StepState.Optional,
                     onClick = if (batteryOk) null else ::requestBatteryExemption
                 )

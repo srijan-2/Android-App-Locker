@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -30,6 +31,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.antimatter.applocker.AppLockerApp
+import com.antimatter.applocker.R
 import com.antimatter.applocker.ui.biometric.BiometricAuthenticator
 import com.antimatter.applocker.ui.biometric.BiometricStatus
 import com.antimatter.applocker.ui.biometric.biometricStatus
@@ -52,6 +54,7 @@ fun UnlockScreen(
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as AppLockerApp
+    val appName = stringResource(R.string.app_name)
     val viewModel: UnlockViewModel = viewModel(
         factory = UnlockViewModel.factory(app.pinRepository, app.settingsRepository)
     )
@@ -68,7 +71,7 @@ fun UnlockScreen(
 
     fun promptBiometric() {
         authenticator?.authenticate(
-            title = "Unlock App Locker",
+            title = "Unlock $appName",
             negativeText = "Use PIN",
             onSuccess = viewModel::onBiometricSuccess,
             onFallback = viewModel::onBiometricFallback,
